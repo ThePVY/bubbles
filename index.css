@@ -8,6 +8,7 @@ html,
 body,
 #app-wrapper {
     height: 100vh;
+    overflow: hidden;
 }
 
 .bubble {
@@ -15,4 +16,25 @@ body,
     border-radius: 50%;
     position: absolute;
     margin: auto;
+}
+
+#app-wrapper header {
+    background-color: rgb(146, 142, 142);
+    height: 10%;
+}
+
+#app-wrapper .bubble-area {
+    background-color: rgb(177, 173, 173);
+    height: 80%;
+}
+
+#app-wrapper footer {
+    background-color: rgb(146, 142, 142);
+    height: 10%;
+}
+
+#app-wrapper header img {
+    height: 100%;
+    position: relative;
+    left: 50%;
 }
