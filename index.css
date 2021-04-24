@@ -11,6 +11,15 @@ body,
     overflow: hidden;
 }
 
+button {
+    background-color: rgb(255, 255, 255);
+    cursor: pointer;
+}
+button:disabled {
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: default;
+}
+
 .bubble {
     background-color: aqua;
     border-radius: 50%;
@@ -22,6 +31,12 @@ body,
     background-color: rgb(146, 142, 142);
     height: 10%;
 }
+#app-wrapper header img {
+    height: 100%;
+    position: relative;
+    left: 50%;
+    cursor: pointer;
+}
 
 #app-wrapper .bubble-area {
     background-color: rgb(177, 173, 173);
@@ -31,10 +46,34 @@ body,
 #app-wrapper footer {
     background-color: rgb(146, 142, 142);
     height: 10%;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
 }
 
-#app-wrapper header img {
+.score-container {
     height: 100%;
-    position: relative;
-    left: 50%;
+    width: 30%;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: center;
 }
+.bubbles, .misses, .punctures, .restart-button {
+    height: fit-content;
+    width: 7vw;
+    color: rgb(39, 41, 41);
+    padding: 5px;
+    border: 1px solid rgb(148, 148, 150);
+    border-radius: 5px;
+    font-size: 0.8em;
+    font-family: sans-serif;
+}
+.bubbles, .misses, .punctures {
+    background-color: rgb(223, 219, 219);
+    text-align: center;
+    cursor: default;
+}
+
