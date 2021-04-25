@@ -1,3 +1,22 @@
+const startInformation = stringToNode(`
+<div class='centered-container'>
+  <span class="information">
+    <p>Click "Start", grab Needle above and Puncture all those annoying bubbles!</p>
+    <br>
+    <p>Though be careful, bubbles hoisting speed will increase with time and
+    wind will blow up bubbles, so be ready!</p>
+  </span>
+</div>
+`)
+
+const pauseInformation = stringToNode(`
+<div class='centered-container'>
+  <span class="information">
+    <p>Paused</p>
+  </span>
+</div>
+`)
+
 window.onload = () => {
   const headerNode = document.querySelector('#app-wrapper header')
   needle.pointX = window.innerWidth / 2
@@ -11,11 +30,46 @@ window.onload = () => {
 
   model.needle = needle
 
-  const startButton = document.querySelector('.restart-button-container button')
+
+  const informationPanel = document.querySelector('.information-panel')
+  informationPanel.appendChild(startInformation)
+  controller.informationPanelNode = informationPanel
+
+  const startButton = document.querySelector('.controls .restart-button')
   controller.startButtonNode = startButton
   startButton.addEventListener('click', () => {
     controller.start()
     startButton.disabled = true
+    pauseButton.disabled = false
+    stopButton.disabled = false
+    informationPanel.style.display = 'none'
+  })
+
+  const pauseHandler = (ctrlFn, nextPBValue, info, disp) => {
+    ctrlFn()
+    pauseButton.innerHTML = nextPBValue
+    informationPanel.innerHTML = ''
+    informationPanel.appendChild(info)
+    view.setDisplay(informationPanel, disp)
+    //view.nullifySize(informationPanel)
+  }
+
+  const pauseButton = document.querySelector('.controls .pause-button')
+  controller.pauseButtonNode = pauseButton
+  pauseButton.addEventListener('click', () => {
+    if (pauseButton.innerHTML === 'Pause') {
+      pauseHandler(controller.pause.bind(controller), 'Resume', pauseInformation, 'block')
+    }
+    else if (pauseButton.innerHTML === 'Resume') {
+      pauseHandler(controller.resume.bind(controller), 'Pause', startInformation, 'none')
+    }
+  })
+
+  const stopButton = document.querySelector('.controls .stop-button')
+  controller.stopButtonNode = stopButton
+  stopButton.addEventListener('click', () => {
+    pauseHandler(controller.resume.bind(controller), 'Pause', startInformation, 'none')
+    controller.stop()
   })
 
   mouseWatcher.startWatch(needle.node, view.bubbleAreaNode, (Xm = 0, Ym = 0, direction = 'left') => {
@@ -45,12 +99,15 @@ const mouseWatcher = {
     this.appNode = appNode
     this.controlNeedle = controlNeedle
     this.bindListeners()
+    this.needleNode.style.cursor = 'grab'
     console.log('start watching')
     this.needleNode.addEventListener('mousedown', this.needleListener)
 
   },
-  needleListener() {
+  needleListener(e) {
     console.log('mouse down on needle')
+    this.needleNode.style.cursor = 'grabbing'
+    this.appNode.style.cursor = 'grabbing'
     this.appNode.addEventListener('mousemove', this.mouseMoveListener)
     this.appNode.addEventListener('mouseup', this.removeListeners)
   },
@@ -61,8 +118,10 @@ const mouseWatcher = {
     this.controlNeedle(this.x, this.y, this.direction)
     this.prevX = this.x
   },
-  removeListeners() {
+  removeListeners(e) {
     console.log('listeners removed')
+    this.needleNode.style.cursor = 'grab'
+    this.appNode.style.cursor = 'default'
     this.appNode.removeEventListener('mousemove', this.mouseMoveListener)
     this.appNode.removeEventListener('mouseup', this.removeListeners)
   },
@@ -77,17 +136,11 @@ const model = {
   needle: null,
   bubbles: [],
   createBubble() {
-    const size = 50 + Math.random() * 200
+    const size = 100 + Math.random() * 150
     const x = size + Math.random() * (window.innerWidth - 2 * size)
     const y = size / 2 + window.innerHeight * 0.1
     this.bubbles.push(new Bubble(x, y, size))
     scoreController.bubbleCreated()
-  },
-  removeBubbleNodes() {
-    this.bubbles.forEach(function (bubble) { this.removeBubbleNode(bubble) }.bind(this))
-  },
-  removeBubbleNode(bubble) {
-    bubble.node.remove()
   },
   checkPuncture() {
     for (let i = 0; i < this.bubbles.length; i++) {
@@ -96,7 +149,7 @@ const model = {
       if (distance < bubble.radius) {
         view.hide(bubble)
         scoreController.bubblePunctured()
-        this.removeBubbleNode(bubble)
+        view.removeBubbleNode(bubble)
         this.removeBubble(bubble)
         return
       }
@@ -107,7 +160,7 @@ const model = {
       const bubble = this.bubbles[i]
       if (bubble.y >= window.innerHeight + bubble.width) {
         scoreController.bubbleMissed()
-        this.removeBubbleNode(bubble)
+        view.removeBubbleNode(bubble)
         this.removeBubble(bubble)
         return
       }
@@ -142,6 +195,12 @@ const view = {
     bubble.node.style.height = `${bubble.height}px`
     return bubble.node
   },
+  removeBubbleNodes(bubbles) {
+    bubbles.forEach(function (bubble) { this.removeBubbleNode(bubble) }.bind(this))
+  },
+  removeBubbleNode(bubble) {
+    bubble.node.remove()
+  },
   hideAll() {
     model.bubbles.forEach((bubble => bubble.node.style.display = 'none'))
   },
@@ -161,6 +220,16 @@ const view = {
     this.displayBubblesScore()
     this.displayMissesScore()
     this.displayPuncturesScore()
+  },
+  setDisabled(node, disabled) {
+    node.disabled = disabled
+  },
+  setDisplay(node, value) {
+    node.style.display = value
+  },
+  nullifySize(node) {
+    node.style.height = '0px'
+    node.style.width = '0px'
   }
 }
 /*-----------------------CONTROL LAYER----------------------*/
@@ -175,7 +244,7 @@ const hoistController = {
     this.hoistingOnGoing = true;
     this.stepCount = 0
     windController.start()
-    this.stepInterval = setInterval(function () {
+    this.stepInterval = new Interval(function () {
       model.bubbles.forEach((bubble) => {
         bubble.x += this.willBeInRange(bubble) ? this.getStep(bubble, windController.step) : 0
         bubble.y += this.stepY
@@ -195,7 +264,7 @@ const hoistController = {
     return nextX > bubble.radius && nextX < window.innerWidth - bubble.radius ? true : false
   },
   getStep(bubble, step) {
-    return windController.direction === 1 ? 
+    return windController.direction === 1 ?
       step * (window.innerWidth - bubble.radius - bubble.x) / (window.innerWidth - bubble.radius)
       :
       step * bubble.x / (window.innerWidth - bubble.radius)
@@ -207,7 +276,7 @@ const hoistController = {
     (this.stepCount % 500 === 0) && this.stepY++
   },
   reset() {
-    clearInterval(this.stepInterval)
+    this.stepInterval.clear()
     this.hoistingOnGoing = false;
     this.stepCount = 0;
     this.stepX = defaultStepX
@@ -223,8 +292,9 @@ const windController = {
   direction: defaultDirection,
   step: defaultDirection * defaultStepX,
   windTime: defaultWindTime,
+  windTimer: null,
   start() {
-    setTimeout(this.changeTheWind.bind(this), this.windTime)
+    this.windTimer = new Timer(this.changeTheWind.bind(this), this.windTime)
   },
   changeTheWind() {
     this.direction = Math.round(Math.random()) ? 1 : -1
@@ -232,9 +302,12 @@ const windController = {
     this.step = this.direction * Math.round(Math.random() * defaultStepX)
     //this.step = this.direction * defaultStepX
     this.windTime = 500 + Math.round(Math.random() * (defaultWindTime - 500))
-    hoistController.hoistingOnGoing && setTimeout(this.changeTheWind.bind(this), this.windTime)
+    if (hoistController.hoistingOnGoing) {
+      this.windTimer = new Timer(this.changeTheWind.bind(this), this.windTime)
+    }
   },
   reset() {
+    this.windTimer.clear()
     this.direction = defaultDirection
     this.step = defaultStepX
     this.windTime = defaultWindTime
@@ -273,40 +346,65 @@ const defaultCreationTime = 3000
 
 const controller = {
   startButtonNode: null,
+  pauseButtonNode: null,
+  stopButtonNode: null,
+  informationPanelNode: null,
   creationOnGoing: true,
   creationTime: defaultCreationTime,
+  gameTimer: null,
+  creationTimer: null,
   start() {
     this.creationOnGoing = true
     view.displayScore()
 
-    setTimeout(this.bubbleCreator.bind(this), this.creationTime)
+    this.creationTimer = new Timer(this.bubbleCreator.bind(this), this.creationTime)
 
     hoistController.startHoisting(model.bubbles)
 
-    setTimeout(function () {
+    this.gameTimer = new Timer(function () {
       this.stopCreation()
     }.bind(this), 60000)
   },
   stopCreation() {
+    this.creationTimer.clear()
+    this.gameTimer.clear()
     this.creationTime = defaultCreationTime
     this.creationOnGoing = false
-    scoreController.counting = false
   },
   onStopHoisting() {
-    model.removeBubbleNodes()
+    view.removeBubbleNodes(model.bubbles)
     model.reset()
-    scoreController.reset()
     windController.reset()
     hoistController.reset()
-    this.startButtonNode.disabled = false
+    view.displayScore()
+    scoreController.reset()
+    view.setDisabled(this.startButtonNode, false)
+    view.setDisabled(this.pauseButtonNode, true)
+    view.setDisabled(this.stopButtonNode, true)
+    view.setDisplay(this.informationPanelNode, 'block')
   },
   bubbleCreator() {
     model.createBubble()
     if (this.creationTime >= 300) {
       this.creationTime *= 0.95
     }
-    this.creationOnGoing && setTimeout(this.bubbleCreator.bind(this), this.creationTime)
-
+    this.creationTimer = this.creationOnGoing && new Timer(this.bubbleCreator.bind(this), this.creationTime)
+  },
+  pause() {
+    this.gameTimer.pause()
+    this.creationTimer.pause()
+    windController.windTimer.pause()
+    hoistController.stepInterval.pause()
+  },
+  resume() {
+    this.gameTimer.resume()
+    this.creationTimer.resume()
+    windController.windTimer.resume()
+    hoistController.stepInterval.resume()
+  },
+  stop() {
+    this.stopCreation()
+    this.onStopHoisting()
   }
 }
 

@@ -14,6 +14,15 @@ body,
 button {
     background-color: rgb(255, 255, 255);
     cursor: pointer;
+
+    height: fit-content;
+    width: 7vw;
+    color: rgb(39, 41, 41);
+    padding: 5px;
+    border: 1px solid rgb(148, 148, 150);
+    border-radius: 5px;
+    font-size: 0.8em;
+    font-family: sans-serif;
 }
 button:disabled {
     background-color: rgba(255, 255, 255, 0.5);
@@ -25,6 +34,9 @@ button:disabled {
     border-radius: 50%;
     position: absolute;
     margin: auto;
+
+    animation-name: bubbleAnimation;
+    animation-duration: 0.5s;
 }
 
 #app-wrapper header, #app-wrapper footer {
@@ -35,7 +47,6 @@ button:disabled {
     height: 100%;
     position: relative;
     left: 50%;
-    cursor: pointer;
 }
 
 #app-wrapper .bubble-area {
@@ -59,7 +70,7 @@ button:disabled {
     justify-content: space-between;
     align-items: center;
 }
-.bubbles, .misses, .punctures, .restart-button {
+.bubbles, .misses, .punctures {
     height: fit-content;
     width: 7vw;
     color: rgb(39, 41, 41);
@@ -75,3 +86,56 @@ button:disabled {
     cursor: default;
 }
 
+
+.information-panel {
+    width: 40vw;
+    height: 40vh;
+    background-color: rgba(221, 219, 219, 0.9);
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    margin: auto;
+    z-index: 10;
+
+    animation-name: informationAnimation;
+    animation-duration: 1.2s;
+}
+
+.centered-container {
+    width: fit-content;
+    height: fit-content;
+    padding: 3rem;
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+}
+
+.information {
+    font-size: 1.5rem;
+    font-family: sans-serif;
+    color: rgb(255, 255, 255);
+}
+
+@keyframes informationAnimation {
+    0% {
+        transform: scale3D(0.3, 0.3, 0.3);
+    }
+    80% {
+        transform: scale3D(1.1, 1.1, 1.1);
+    }
+    100% {
+        transform: scale3D(1, 1, 1);
+    }
+}
+
+@keyframes bubbleAnimation {
+    0% {
+        transform: scale3D(0.3, 0.3, 0.3);
+    }
+    100% {
+        transform: scale3D(1, 1, 1);
+    }
+}
