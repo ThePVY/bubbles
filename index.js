@@ -1,13 +1,8 @@
 window.onload = () => {
-  const container = document.querySelector('#app-wrapper header')
+  const headerNode = document.querySelector('#app-wrapper header')
   needle.pointX = window.innerWidth / 2
-  needle.pointY = window.innerHeight - container.offsetHeight
+  needle.pointY = window.innerHeight - headerNode.offsetHeight
   needle.node = document.querySelector('#app-wrapper header img')
-  mouseWatcher.startWatch(container, (Xm = 0, Ym = 0, direction = 'left') => {
-    needle.node.src = direction === 'right' ? './needle-to-right.png' : './needle-to-left.png'
-    needle.node.style.left = `${Xm}px`
-    needle.pointX = direction === 'right' ? Xm + 52 : Xm
-  })
 
   view.bubbleAreaNode = document.querySelector('#app-wrapper')
   view.bubblesScoreNode = document.querySelector('#app-wrapper .bubbles')
@@ -22,6 +17,12 @@ window.onload = () => {
     controller.start()
     startButton.disabled = true
   })
+
+  mouseWatcher.startWatch(needle.node, view.bubbleAreaNode, (Xm = 0, Ym = 0, direction = 'left') => {
+    needle.node.src = direction === 'right' ? './needle-to-right.png' : './needle-to-left.png'
+    needle.node.style.left = `${Xm}px`
+    needle.pointX = direction === 'right' ? Xm + 52 : Xm
+  })
 }
 
 /*-----------------------MODEL LAYER----------------------*/
@@ -31,34 +32,44 @@ const needle = {
   node: null
 }
 
-function Bubble(x, y, size) {
-  this.x = x //abs coordinates of center
-  this.y = y //abs coordinates of center
-  this.width = size
-  this.height = size
-  this.radius = size / 2
-  this.node = document.createElement('div')
-  view.renderBubble(this)
-}
-
 const mouseWatcher = {
   x: 0,
   y: 0,
-  watcher: null,
+  needleNode: null,
+  appNode: null,
+  controlNeedle: null,
   prevX: this.x,
   direction: 'left',
-  startWatch(container, handler = () => { }) {
-    this.watcher = container.addEventListener('mousemove', function (e) {
-      this.x = e.clientX
-      this.y = e.clientY
-      this.direction = this.x > this.prevX ? 'right' : 'left'
-      handler(this.x, this.y, this.direction)
-      this.prevX = this.x
-    }.bind(this))
+  startWatch(needleNode, appNode, controlNeedle = () => { }) {
+    this.needleNode = needleNode
+    this.appNode = appNode
+    this.controlNeedle = controlNeedle
+    this.bindListeners()
+    console.log('start watching')
+    this.needleNode.addEventListener('mousedown', this.needleListener)
 
   },
-  stopWatch(container) {
-    container.removeEventListener('mousemove', this.watcher)
+  needleListener() {
+    console.log('mouse down on needle')
+    this.appNode.addEventListener('mousemove', this.mouseMoveListener)
+    this.appNode.addEventListener('mouseup', this.removeListeners)
+  },
+  mouseMoveListener(e) {
+    this.x = e.clientX
+    this.y = e.clientY
+    this.direction = this.x > this.prevX ? 'right' : 'left'
+    this.controlNeedle(this.x, this.y, this.direction)
+    this.prevX = this.x
+  },
+  removeListeners() {
+    console.log('listeners removed')
+    this.appNode.removeEventListener('mousemove', this.mouseMoveListener)
+    this.appNode.removeEventListener('mouseup', this.removeListeners)
+  },
+  bindListeners() {
+    this.needleListener = this.needleListener.bind(this)
+    this.mouseMoveListener = this.mouseMoveListener.bind(this)
+    this.removeListeners = this.removeListeners.bind(this)
   }
 }
 

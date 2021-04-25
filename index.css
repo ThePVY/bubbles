@@ -27,8 +27,8 @@ button:disabled {
     margin: auto;
 }
 
-#app-wrapper header {
-    background-color: rgb(146, 142, 142);
+#app-wrapper header, #app-wrapper footer {
+    background-color: rgb(231, 231, 231);
     height: 10%;
 }
 #app-wrapper header img {
@@ -39,13 +39,11 @@ button:disabled {
 }
 
 #app-wrapper .bubble-area {
-    background-color: rgb(177, 173, 173);
+    background-color: rgb(255, 255, 255);
     height: 80%;
 }
 
 #app-wrapper footer {
-    background-color: rgb(146, 142, 142);
-    height: 10%;
     display: flex;
     flex-flow: row nowrap;
     justify-content: space-between;
@@ -72,7 +70,7 @@ button:disabled {
     font-family: sans-serif;
 }
 .bubbles, .misses, .punctures {
-    background-color: rgb(223, 219, 219);
+    background-color: rgb(255, 255, 255);
     text-align: center;
     cursor: default;
 }
