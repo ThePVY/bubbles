@@ -34,6 +34,7 @@ window.onload = () => {
   const informationPanel = document.querySelector('.information-panel')
   informationPanel.appendChild(startInformation)
   controller.informationPanelNode = informationPanel
+  view.informationPanelNode = informationPanel
 
   const startButton = document.querySelector('.controls .restart-button')
   controller.startButtonNode = startButton
@@ -45,11 +46,10 @@ window.onload = () => {
     informationPanel.style.display = 'none'
   })
 
-  const pauseHandler = (ctrlFn, nextPBValue, info, disp) => {
+  const pauseHandler = (ctrlFn, nextPBValue, infoNode, disp) => {
     ctrlFn()
     pauseButton.innerHTML = nextPBValue
-    informationPanel.innerHTML = ''
-    informationPanel.appendChild(info)
+    view.displayOnInfoPanel(infoNode)
     view.setDisplay(informationPanel, disp)
     //view.nullifySize(informationPanel)
   }
@@ -179,6 +179,7 @@ const view = {
   bubblesScoreNode: null,
   missesScoreNode: null,
   puncturesScoreNode: null,
+  informationPanelNode: null,
   renderBubble(bubble) {
     this.update(bubble)
     bubble.node.style.backgroundColor = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`
@@ -230,6 +231,10 @@ const view = {
   nullifySize(node) {
     node.style.height = '0px'
     node.style.width = '0px'
+  },
+  displayOnInfoPanel(node) {
+    this.informationPanelNode.innerHTML = ''
+    this.informationPanelNode.appendChild(node)
   }
 }
 /*-----------------------CONTROL LAYER----------------------*/
@@ -321,18 +326,28 @@ const scoreController = {
   counting: true,
   bubbleCreated() {
     this.bubbles++
-    this.counting && view.displayBubblesScore()
+    view.displayBubblesScore()
     console.log(`bubbles: ${this.bubbles}`)
   },
   bubbleMissed() {
     this.misses++
-    this.counting && view.displayMissesScore()
+    view.displayMissesScore()
     console.log(`misses: ${this.misses}`)
   },
   bubblePunctured() {
     this.punctures++
-    this.counting && view.displayPuncturesScore()
+    view.displayPuncturesScore()
     console.log(`punctures: ${this.punctures}`)
+  },
+  getScoreInfo() {
+    return stringToNode(`
+    <div class='centered-container'>
+      <span class="information">
+        <p>Punctures: ${scoreController.punctures}</p>
+        <p>Misses: ${scoreController.misses}</p>
+      </span>
+    </div>
+    `)
   },
   reset() {
     this.bubbles = 0
@@ -370,6 +385,7 @@ const controller = {
     this.gameTimer.clear()
     this.creationTime = defaultCreationTime
     this.creationOnGoing = false
+    scoreController.counting = false
   },
   onStopHoisting() {
     view.removeBubbleNodes(model.bubbles)
@@ -377,6 +393,7 @@ const controller = {
     windController.reset()
     hoistController.reset()
     view.displayScore()
+    view.displayOnInfoPanel(scoreController.getScoreInfo())
     scoreController.reset()
     view.setDisabled(this.startButtonNode, false)
     view.setDisabled(this.pauseButtonNode, true)
